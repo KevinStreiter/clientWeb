@@ -1,5 +1,5 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var bubble_1 = require("./bubble");
 var d3 = require("./modules/d3.js");
 window.onload = function () {
@@ -53,8 +53,8 @@ function insertRow(bubble) {
     var cell2 = row.insertCell(1);
     var cell3 = row.insertCell(2);
     cell1.innerHTML = rowCounter.toString();
-    cell2.innerHTML = bubble.x.toString();
-    cell3.innerHTML = bubble.y.toString();
+    cell2.innerHTML = bubble.XValue.toString();
+    cell3.innerHTML = bubble.YValue.toString();
 }
 function resetRowColor() {
     var table = document.getElementById("tableValues");
@@ -98,14 +98,15 @@ function highlightBubble(bubble) {
         .attr("r", radius + 5);
 }
 function appendBubbles() {
+    var boundaries = document.getElementById("graph").getBoundingClientRect();
     d3.select('#graph').selectAll("circle")
         .data(coordinates)
         .enter().append("circle")
         .attr("cx", function (d) {
-        return d.x;
+        return d.XValue;
     })
         .attr("cy", function (d) {
-        return d.y;
+        return d.YValue;
     })
         .attr("r", radius)
         .attr("id", function (d) {
@@ -124,4 +125,35 @@ function appendBubbles() {
             .attr("r", radius);
         highlightRow();
     });
+    defineBubbleMovement();
+}
+function defineBubbleMovement() {
+    var bubbles = d3.select('#graph').selectAll("circle");
+    generateNewPositions();
+    repeat();
+    function repeat() {
+        bubbles
+            .data(coordinates)
+            .transition()
+            .attr("cx", function (d) {
+            return d.XValue;
+        })
+            .attr("cy", function (d) {
+            return d.YValue;
+        })
+            .delay(0)
+            .duration(2000)
+            .on("end", function () {
+            generateNewPositions();
+            repeat();
+        });
+    }
+}
+function generateNewPositions() {
+    var boundaries = document.getElementById("graph").getBoundingClientRect();
+    coordinates.forEach(function (element) {
+        element.XValue = element.generateRandomNumber(boundaries.width, radius);
+        element.YValue = element.generateRandomNumber(boundaries.height, radius);
+    });
+    console.log(coordinates);
 }

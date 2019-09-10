@@ -1,6 +1,6 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var Bubble = /** @class */ (function () {
     function Bubble(rowCounter, width, height, radius) {
         this.x = this.generateRandomNumber(width, radius);
@@ -10,6 +10,26 @@ var Bubble = /** @class */ (function () {
     Bubble.prototype.generateRandomNumber = function (value, radius) {
         return Math.floor(Math.random() * (value - (radius * 4))) + (radius * 2);
     };
+    Object.defineProperty(Bubble.prototype, "XValue", {
+        get: function () {
+            return this.x;
+        },
+        set: function (value) {
+            this.x = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Bubble.prototype, "YValue", {
+        get: function () {
+            return this.y;
+        },
+        set: function (value) {
+            this.y = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return Bubble;
 }());
 exports.Bubble = Bubble;
@@ -1186,7 +1206,7 @@ function selection_empty() {
   return !this.node();
 }
 
-function selection_each(callback) {
+function selection_each(callback, repeat) {
 
   for (var groups = this._groups, j = 0, m = groups.length; j < m; ++j) {
     for (var group = groups[j], i = 0, n = group.length, node; i < n; ++i) {
@@ -18446,7 +18466,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 },{}],3:[function(require,module,exports){
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var bubble_1 = require("./bubble");
 var d3 = require("./modules/d3.js");
 window.onload = function () {
@@ -18500,8 +18520,8 @@ function insertRow(bubble) {
     var cell2 = row.insertCell(1);
     var cell3 = row.insertCell(2);
     cell1.innerHTML = rowCounter.toString();
-    cell2.innerHTML = bubble.x.toString();
-    cell3.innerHTML = bubble.y.toString();
+    cell2.innerHTML = bubble.XValue.toString();
+    cell3.innerHTML = bubble.YValue.toString();
 }
 function resetRowColor() {
     var table = document.getElementById("tableValues");
@@ -18545,14 +18565,15 @@ function highlightBubble(bubble) {
         .attr("r", radius + 5);
 }
 function appendBubbles() {
+    var boundaries = document.getElementById("graph").getBoundingClientRect();
     d3.select('#graph').selectAll("circle")
         .data(coordinates)
         .enter().append("circle")
         .attr("cx", function (d) {
-        return d.x;
+        return d.XValue;
     })
         .attr("cy", function (d) {
-        return d.y;
+        return d.YValue;
     })
         .attr("r", radius)
         .attr("id", function (d) {
@@ -18571,6 +18592,37 @@ function appendBubbles() {
             .attr("r", radius);
         highlightRow();
     });
+    defineBubbleMovement();
+}
+function defineBubbleMovement() {
+    var bubbles = d3.select('#graph').selectAll("circle");
+    generateNewPositions();
+    repeat();
+    function repeat() {
+        bubbles
+            .data(coordinates)
+            .transition()
+            .attr("cx", function (d) {
+            return d.XValue;
+        })
+            .attr("cy", function (d) {
+            return d.YValue;
+        })
+            .delay(0)
+            .duration(2000)
+            .on("end", function () {
+            generateNewPositions();
+            repeat();
+        });
+    }
+}
+function generateNewPositions() {
+    var boundaries = document.getElementById("graph").getBoundingClientRect();
+    coordinates.forEach(function (element) {
+        element.XValue = element.generateRandomNumber(boundaries.width, radius);
+        element.YValue = element.generateRandomNumber(boundaries.height, radius);
+    });
+    console.log(coordinates);
 }
 
 },{"./bubble":1,"./modules/d3.js":2}]},{},[3]);
