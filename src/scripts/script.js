@@ -55,6 +55,9 @@ function insertRow(bubble) {
     cell1.innerHTML = rowCounter.toString();
     cell2.innerHTML = bubble.XValue.toString();
     cell3.innerHTML = bubble.YValue.toString();
+    cell1.setAttribute("id", "id");
+    cell2.setAttribute("id", "xValue");
+    cell3.setAttribute("id", "yValue");
 }
 function resetRowColor() {
     var table = document.getElementById("tableValues");
@@ -130,6 +133,7 @@ function appendBubbles() {
 function defineBubbleMovement() {
     var bubbles = d3.select('#graph').selectAll("circle");
     generateNewPositions();
+    updateTableEntries();
     repeat();
     function repeat() {
         bubbles
@@ -142,9 +146,10 @@ function defineBubbleMovement() {
             return d.YValue;
         })
             .delay(0)
-            .duration(2000)
+            .duration(5000)
             .on("end", function () {
             generateNewPositions();
+            updateTableEntries();
             repeat();
         });
     }
@@ -155,5 +160,29 @@ function generateNewPositions() {
         element.XValue = element.generateRandomNumber(boundaries.width, radius);
         element.YValue = element.generateRandomNumber(boundaries.height, radius);
     });
-    console.log(coordinates);
+}
+function updateTableEntries() {
+    var table = document.getElementById("tableValues");
+    coordinates.forEach(function (element) {
+        for (var r = 0, n = table.rows.length; r < n; r++) {
+            if (Number(table.rows[r].cells[0].innerHTML) == element.id) {
+                for (var c = 1, m = table.rows[r].cells.length; c < m; c++) {
+                    switch (table.rows[r].cells[c].id) {
+                        case "xValue": {
+                            table.rows[r].cells[c].innerHTML = element.XValue.toString();
+                            break;
+                        }
+                        case "yValue": {
+                            table.rows[r].cells[c].innerHTML = element.YValue.toString();
+                            break;
+                        }
+                        default: {
+                            // do nothing
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }

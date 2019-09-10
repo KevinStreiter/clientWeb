@@ -61,11 +61,14 @@ function insertRow(bubble:Bubble) :void {
     cell1.innerHTML = rowCounter.toString();
     cell2.innerHTML = bubble.XValue.toString();
     cell3.innerHTML = bubble.YValue.toString();
+    cell1.setAttribute("id", "id");
+    cell2.setAttribute("id", "xValue");
+    cell3.setAttribute("id", "yValue");
 }
 
 function resetRowColor() :void {
     let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues");
-    for (var r = 0, n = table.rows.length; r < n; r++) {
+    for (let r = 0, n = table.rows.length; r < n; r++) {
         table.rows[r].style.backgroundColor = plainBlueColor; // reset
     }
 }
@@ -76,9 +79,9 @@ function highlightRow (bubble?:Bubble, row?:any) :void {
     }
     else {
         let table: HTMLTableElement = <HTMLTableElement>document.getElementById("tableValues");
-        for (var r = 0, n = table.rows.length; r < n; r++) {
+        for (let r = 0, n = table.rows.length; r < n; r++) {
             table.rows[r].style.backgroundColor = plainBlueColor; // reset
-            for (var c = 0, m = table.rows[r].cells.length; c < m; c++) {
+            for (let c = 0, m = table.rows[r].cells.length; c < m; c++) {
                 if (bubble != undefined) {
                     if (Number(table.rows[r].cells[c].innerHTML) == bubble.id) {
                         table.rows[r].style.backgroundColor = highlightedBlueColor;
@@ -143,6 +146,7 @@ function appendBubbles() :void {
 function defineBubbleMovement() {
     let bubbles = d3.select('#graph').selectAll("circle");
     generateNewPositions();
+    updateTableEntries();
     repeat();
     function repeat() {
         bubbles
@@ -158,6 +162,7 @@ function defineBubbleMovement() {
             .duration(5000)
             .on("end",function () {
                 generateNewPositions();
+                updateTableEntries();
                 repeat();
             });
     }
@@ -170,3 +175,31 @@ function generateNewPositions() {
         element.YValue = element.generateRandomNumber(boundaries.height, radius);
     });
 }
+
+function updateTableEntries () {
+    let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues");
+    coordinates.forEach((element) => {
+        for (let r = 0, n = table.rows.length; r < n; r++) {
+                if (Number(table.rows[r].cells[0].innerHTML) == element.id) {
+                    for (let c = 1, m = table.rows[r].cells.length; c < m; c++) {
+                        switch (table.rows[r].cells[c].id) {
+                            case "xValue": {
+                                table.rows[r].cells[c].innerHTML = element.XValue.toString();
+                                break;
+                            }
+                            case "yValue": {
+                                table.rows[r].cells[c].innerHTML = element.YValue.toString();
+                                break;
+                            }
+                            default: {
+                                // do nothing
+                                break;
+                            }
+                        }
+                    }
+                }
+        }
+    });
+}
+
+
