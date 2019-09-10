@@ -1,4 +1,20 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+"use strict";
+exports.__esModule = true;
+var Bubble = /** @class */ (function () {
+    function Bubble(rowCounter, width, height, radius) {
+        this.x = this.generateRandomNumber(width, radius);
+        this.y = this.generateRandomNumber(height, radius);
+        this.id = rowCounter;
+    }
+    Bubble.prototype.generateRandomNumber = function (value, radius) {
+        return Math.floor(Math.random() * (value - (radius * 4))) + (radius * 2);
+    };
+    return Bubble;
+}());
+exports.Bubble = Bubble;
+
+},{}],2:[function(require,module,exports){
 // https://d3js.org v5.12.0 Copyright 2019 Mike Bostock
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -18428,13 +18444,13 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 "use strict";
 exports.__esModule = true;
-var vector_1 = require("./vector");
+var bubble_1 = require("./bubble");
 var d3 = require("./modules/d3.js");
 window.onload = function () {
-    document.getElementById("button").addEventListener("click", getRandomVector, false);
+    document.getElementById("button").addEventListener("click", getRandomBubble, false);
     document.getElementById("tableValues").addEventListener("mouseover", onMouseOver, false);
     document.getElementById("tableValues").addEventListener("mouseout", onMouseOut, false);
 };
@@ -18447,45 +18463,45 @@ function getEventTarget(e) {
     e = e || window.event;
     return e.target || e.srcElement;
 }
-function findVector(id) {
-    var vector = undefined;
+function findBubble(id) {
+    var bubble = undefined;
     coordinates.forEach(function (element) {
         if (element.id == id) {
-            vector = element;
+            bubble = element;
         }
     });
-    return vector;
+    return bubble;
 }
 function onMouseOver() {
     var target = getEventTarget(event);
     if (target && target.tagName == "TD") {
         var row = target.parentElement;
         highlightRow(undefined, row);
-        var vector = findVector(Number(row.cells[0].innerHTML));
-        highlightCircle(vector);
+        var bubble = findBubble(Number(row.cells[0].innerHTML));
+        highlightBubble(bubble);
     }
 }
 function onMouseOut() {
     resetRowColor();
-    resetCircleColor();
+    resetBubbleColor();
 }
-function getRandomVector() {
+function getRandomBubble() {
     var boundaries = document.getElementById("graph").getBoundingClientRect();
-    var vector = new vector_1.Vector(rowCounter, boundaries.width, boundaries.height, radius);
-    coordinates.push(vector);
-    insertRow(vector);
-    appendCircles();
+    var bubble = new bubble_1.Bubble(rowCounter, boundaries.width, boundaries.height, radius);
+    coordinates.push(bubble);
+    insertRow(bubble);
+    appendBubbles();
     rowCounter++;
 }
-function insertRow(vector) {
+function insertRow(bubble) {
     var table = document.getElementById("tableValues");
     var row = table.insertRow(-1);
     var cell1 = row.insertCell(0);
     var cell2 = row.insertCell(1);
     var cell3 = row.insertCell(2);
     cell1.innerHTML = rowCounter.toString();
-    cell2.innerHTML = vector.x.toString();
-    cell3.innerHTML = vector.y.toString();
+    cell2.innerHTML = bubble.x.toString();
+    cell3.innerHTML = bubble.y.toString();
 }
 function resetRowColor() {
     var table = document.getElementById("tableValues");
@@ -18493,7 +18509,7 @@ function resetRowColor() {
         table.rows[r].style.backgroundColor = plainBlueColor; // reset
     }
 }
-function highlightRow(vector, row) {
+function highlightRow(bubble, row) {
     if (row != undefined) {
         row.style.backgroundColor = highlightedBlueColor;
     }
@@ -18502,8 +18518,8 @@ function highlightRow(vector, row) {
         for (var r = 0, n = table.rows.length; r < n; r++) {
             table.rows[r].style.backgroundColor = plainBlueColor; // reset
             for (var c = 0, m = table.rows[r].cells.length; c < m; c++) {
-                if (vector != undefined) {
-                    if (Number(table.rows[r].cells[c].innerHTML) == vector.id) {
+                if (bubble != undefined) {
+                    if (Number(table.rows[r].cells[c].innerHTML) == bubble.id) {
                         table.rows[r].style.backgroundColor = highlightedBlueColor;
                         break;
                     }
@@ -18512,23 +18528,23 @@ function highlightRow(vector, row) {
         }
     }
 }
-function resetCircleColor() {
+function resetBubbleColor() {
     d3.select('#graph').selectAll("circle")
         .style("fill", plainBlueColor)
         .attr("r", radius);
 }
-function highlightCircle(vector) {
-    resetCircleColor();
+function highlightBubble(bubble) {
+    resetBubbleColor();
     d3.select('#graph').selectAll("circle")
         .filter(function (element) {
-        if (Number(element.id) == vector.id) {
+        if (Number(element.id) == bubble.id) {
             return element;
         }
     })
         .style("fill", highlightedBlueColor)
         .attr("r", radius + 5);
 }
-function appendCircles() {
+function appendBubbles() {
     d3.select('#graph').selectAll("circle")
         .data(coordinates)
         .enter().append("circle")
@@ -18557,20 +18573,4 @@ function appendCircles() {
     });
 }
 
-},{"./modules/d3.js":1,"./vector":3}],3:[function(require,module,exports){
-"use strict";
-exports.__esModule = true;
-var Vector = /** @class */ (function () {
-    function Vector(rowCounter, width, height, radius) {
-        this.x = this.generateRandomNumber(width, radius);
-        this.y = this.generateRandomNumber(height, radius);
-        this.id = rowCounter;
-    }
-    Vector.prototype.generateRandomNumber = function (value, radius) {
-        return Math.floor(Math.random() * (value - (radius * 4))) + (radius * 2);
-    };
-    return Vector;
-}());
-exports.Vector = Vector;
-
-},{}]},{},[2]);
+},{"./bubble":1,"./modules/d3.js":2}]},{},[3]);

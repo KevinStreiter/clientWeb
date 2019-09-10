@@ -1,8 +1,8 @@
-import { Vector } from "./vector"
+import { Bubble } from "./bubble"
 import * as d3 from "./modules/d3.js"
 
 window.onload = () => {
-    document.getElementById ("button").addEventListener ("click", getRandomVector, false);
+    document.getElementById ("button").addEventListener ("click", getRandomBubble, false);
     document.getElementById("tableValues").addEventListener("mouseover", onMouseOver, false);
     document.getElementById("tableValues").addEventListener("mouseout", onMouseOut, false);
 };
@@ -11,21 +11,21 @@ const radius = 20;
 const plainBlueColor = "#7b9eb4";
 const highlightedBlueColor = "#323c4b";
 var rowCounter:number = 1;
-var coordinates:Vector[] = [];
+var coordinates:Bubble[] = [];
 
 function getEventTarget(e) {
     e = e || window.event;
     return e.target || e.srcElement;
 }
 
-function findVector (id:number) :Vector {
-    let vector:Vector = undefined;
+function findBubble (id:number) :Bubble {
+    let bubble:Bubble = undefined;
     coordinates.forEach((element) => {
         if(element.id == id) {
-            vector = element;
+            bubble = element;
         }
     });
-    return vector;
+    return bubble;
 }
 
 function onMouseOver() :void {
@@ -33,34 +33,34 @@ function onMouseOver() :void {
     if (target && target.tagName == "TD") {
         let row = target.parentElement;
         highlightRow(undefined, row);
-        let vector:Vector = findVector(Number(row.cells[0].innerHTML));
-        highlightCircle (vector);
+        let bubble:Bubble = findBubble(Number(row.cells[0].innerHTML));
+        highlightBubble (bubble);
     }
 }
 
 function onMouseOut() :void {
     resetRowColor();
-    resetCircleColor();
+    resetBubbleColor();
 }
 
-function getRandomVector() :void {
+function getRandomBubble() :void {
     let boundaries = document.getElementById("graph").getBoundingClientRect();
-    let vector: Vector = new Vector(rowCounter, boundaries.width, boundaries.height, radius);
-    coordinates.push(vector);
-    insertRow(vector);
-    appendCircles();
+    let bubble: Bubble = new Bubble(rowCounter, boundaries.width, boundaries.height, radius);
+    coordinates.push(bubble);
+    insertRow(bubble);
+    appendBubbles();
     rowCounter++;
 }
 
-function insertRow(vector:Vector) :void {
+function insertRow(bubble:Bubble) :void {
     let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues");
     let row = table.insertRow(-1);
     let cell1 = row.insertCell(0);
     let cell2 = row.insertCell(1);
     let cell3 = row.insertCell(2);
     cell1.innerHTML = rowCounter.toString();
-    cell2.innerHTML = vector.x.toString();
-    cell3.innerHTML = vector.y.toString();
+    cell2.innerHTML = bubble.x.toString();
+    cell3.innerHTML = bubble.y.toString();
 }
 
 function resetRowColor() :void {
@@ -70,7 +70,7 @@ function resetRowColor() :void {
     }
 }
 
-function highlightRow (vector?:Vector, row?:any) :void {
+function highlightRow (bubble?:Bubble, row?:any) :void {
     if (row != undefined) {
         row.style.backgroundColor = highlightedBlueColor;
     }
@@ -79,8 +79,8 @@ function highlightRow (vector?:Vector, row?:any) :void {
         for (var r = 0, n = table.rows.length; r < n; r++) {
             table.rows[r].style.backgroundColor = plainBlueColor; // reset
             for (var c = 0, m = table.rows[r].cells.length; c < m; c++) {
-                if (vector != undefined) {
-                    if (Number(table.rows[r].cells[c].innerHTML) == vector.id) {
+                if (bubble != undefined) {
+                    if (Number(table.rows[r].cells[c].innerHTML) == bubble.id) {
                         table.rows[r].style.backgroundColor = highlightedBlueColor;
                         break;
                     }
@@ -90,17 +90,17 @@ function highlightRow (vector?:Vector, row?:any) :void {
     }
 }
 
-function resetCircleColor() :void {
+function resetBubbleColor() :void {
     d3.select('#graph').selectAll("circle")
         .style("fill", plainBlueColor)
         .attr("r", radius);
 }
 
-function highlightCircle (vector:Vector) :void {
-    resetCircleColor();
+function highlightBubble (bubble:Bubble) :void {
+    resetBubbleColor();
     d3.select('#graph').selectAll("circle")
         .filter (function (element) {
-            if (Number(element.id) == vector.id) {
+            if (Number(element.id) == bubble.id) {
                 return element;
             }
         })
@@ -109,7 +109,7 @@ function highlightCircle (vector:Vector) :void {
 }
 
 
-function appendCircles() :void {
+function appendBubbles() :void {
     d3.select('#graph').selectAll("circle")
         .data(coordinates)
         .enter().append("circle")
@@ -137,3 +137,4 @@ function appendCircles() :void {
             highlightRow();
         });
 }
+

@@ -1,4 +1,4 @@
-export class Vector {
+export class Bubble {
     readonly x: number;
     readonly y: number;
     readonly id: number;
