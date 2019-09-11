@@ -98,7 +98,7 @@ function insertBubble(bubble:Bubble) {
 
     setInterval(function () {
         bubbleObject.attr("cx", moveX).attr("cy", moveY);
-        updateTableEntries();
+        updateTableEntries(bubble, bubbleObject);
     }, 1);
 
     function isCollision(value:number) :boolean {
@@ -178,33 +178,28 @@ function highlightBubble (bubble:Bubble) :void {
         })
 }
 
-function updateTableEntries () {
+function updateTableEntries (bubble:Bubble, element:any) {
     let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues");
-    d3.select('#graph').selectAll("circle")
-        .each(function () {
-            for (let r = 0, n = table.rows.length; r < n; r++) {
-                    if (Number(table.rows[r].cells[0].innerHTML) == Number(this.id)) {
-                        for (let c = 1, m = table.rows[r].cells.length; c < m; c++) {
-                            switch (table.rows[r].cells[c].id) {
-                                case "xValue": {
-                                    table.rows[r].cells[c].innerHTML = Math.round(Number(this.cx.baseVal.value)).toString();
-                                    console.log(this.cx.baseVal.value);
-                                    break;
-                                }
-                                case "yValue": {
-                                    table.rows[r].cells[c].innerHTML = Math.round(Number(this.cy.baseVal.value)).toString();
-                                    console.log(this.cy.baseVal.value);
-                                    break;
-                                }
-                                default: {
-                                    // do nothing
-                                    break;
-                                }
+        for (let r = 0, n = table.rows.length; r < n; r++) {
+                if (Number(table.rows[r].cells[0].innerHTML) == bubble.id) {
+                    for (let c = 1, m = table.rows[r].cells.length; c < m; c++) {
+                        switch (table.rows[r].cells[c].id) {
+                            case "xValue": {
+                                table.rows[r].cells[c].innerHTML = Math.round(Number(element.attr("cx"))).toString();
+                                break;
+                            }
+                            case "yValue": {
+                                table.rows[r].cells[c].innerHTML = Math.round(Number(element.attr("cy"))).toString();
+                                break;
+                            }
+                            default: {
+                                // do nothing
+                                break;
                             }
                         }
                     }
-            }
-        });
+                }
+        }
 }
 
 
