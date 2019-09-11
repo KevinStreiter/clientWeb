@@ -2,30 +2,65 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Bubble = /** @class */ (function () {
-    function Bubble(rowCounter, width, height, radius) {
-        this.x = this.generateRandomNumber(width, radius);
-        this.y = this.generateRandomNumber(height, radius);
+    function Bubble(rowCounter, width, height, maxRadius) {
+        var velocity = Math.random() * 2 + 1;
+        var angle = Math.random() * 360;
         this.id = rowCounter;
+        this.radius = Math.floor(Math.random() * (maxRadius - 1) + 5);
+        this._x = this.generateRandomNumber(width);
+        this._y = this.generateRandomNumber(height);
+        this._vx = velocity * Math.cos(angle * Math.PI / 180);
+        this._vy = velocity * Math.sin(angle * Math.PI / 180);
     }
-    Bubble.prototype.generateRandomNumber = function (value, radius) {
-        return Math.floor(Math.random() * (value - (radius * 4))) + (radius * 2);
+    Bubble.prototype.generateRandomNumber = function (value) {
+        return Math.floor(Math.random() * (value - (this.radius * 4))) + (this.radius * 2);
     };
-    Object.defineProperty(Bubble.prototype, "XValue", {
+    Object.defineProperty(Bubble.prototype, "x", {
         get: function () {
-            return this.x;
+            return this._x;
         },
         set: function (value) {
-            this.x = value;
+            this._x = value;
         },
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(Bubble.prototype, "YValue", {
+    Object.defineProperty(Bubble.prototype, "y", {
         get: function () {
-            return this.y;
+            return this._y;
         },
         set: function (value) {
-            this.y = value;
+            this._y = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Bubble.prototype, "vx", {
+        get: function () {
+            return this._vx;
+        },
+        set: function (value) {
+            this._vx = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Bubble.prototype, "vy", {
+        get: function () {
+            return this._vy;
+        },
+        set: function (value) {
+            this._vy = value;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Bubble.prototype, "color", {
+        get: function () {
+            return this._color;
+        },
+        set: function (value) {
+            this._color = value;
         },
         enumerable: true,
         configurable: true
@@ -1206,7 +1241,7 @@ function selection_empty() {
   return !this.node();
 }
 
-function selection_each(callback, defineBubbleMovement) {
+function selection_each(callback) {
 
   for (var groups = this._groups, j = 0, m = groups.length; j < m; ++j) {
     for (var group = groups[j], i = 0, n = group.length, node; i < n; ++i) {
@@ -18474,18 +18509,18 @@ window.onload = function () {
     document.getElementById("tableValues").addEventListener("mouseover", onMouseOver, false);
     document.getElementById("tableValues").addEventListener("mouseout", onMouseOut, false);
 };
-var radius = 20;
+var maxRadius = 40;
 var plainBlueColor = "#7b9eb4";
 var highlightedBlueColor = "#323c4b";
 var rowCounter = 1;
-var coordinates = [];
+var bubbleList = [];
 function getEventTarget(e) {
     e = e || window.event;
     return e.target || e.srcElement;
 }
 function findBubble(id) {
     var bubble = undefined;
-    coordinates.forEach(function (element) {
+    bubbleList.forEach(function (element) {
         if (element.id == id) {
             bubble = element;
         }
@@ -18507,10 +18542,11 @@ function onMouseOut() {
 }
 function getRandomBubble() {
     var boundaries = document.getElementById("graph").getBoundingClientRect();
-    var bubble = new bubble_1.Bubble(rowCounter, boundaries.width, boundaries.height, radius);
-    coordinates.push(bubble);
+    var bubble = new bubble_1.Bubble(rowCounter, boundaries.width, boundaries.height, maxRadius);
+    bubbleList.push(bubble);
     insertRow(bubble);
     appendBubbles();
+    defineBubbleMovement();
     rowCounter++;
 }
 function insertRow(bubble) {
@@ -18520,8 +18556,8 @@ function insertRow(bubble) {
     var cell2 = row.insertCell(1);
     var cell3 = row.insertCell(2);
     cell1.innerHTML = rowCounter.toString();
-    cell2.innerHTML = bubble.XValue.toString();
-    cell3.innerHTML = bubble.YValue.toString();
+    cell2.innerHTML = bubble.x.toString();
+    cell3.innerHTML = bubble.y.toString();
     cell1.setAttribute("id", "id");
     cell2.setAttribute("id", "xValue");
     cell3.setAttribute("id", "yValue");
@@ -18554,7 +18590,9 @@ function highlightRow(bubble, row) {
 function resetBubbleColor() {
     d3.select('#graph').selectAll("circle")
         .style("fill", plainBlueColor)
-        .attr("r", radius);
+        .attr("r", function (d) {
+        return d.radius;
+    });
 }
 function highlightBubble(bubble) {
     resetBubbleColor();
@@ -18565,20 +18603,23 @@ function highlightBubble(bubble) {
         }
     })
         .style("fill", highlightedBlueColor)
-        .attr("r", radius + 5);
+        .attr("r", function (d) {
+        return d.radius + 5;
+    });
 }
 function appendBubbles() {
-    var boundaries = document.getElementById("graph").getBoundingClientRect();
     d3.select('#graph').selectAll("circle")
-        .data(coordinates)
+        .data(bubbleList)
         .enter().append("circle")
         .attr("cx", function (d) {
-        return d.XValue;
+        return d.x;
     })
         .attr("cy", function (d) {
-        return d.YValue;
+        return d.y;
     })
-        .attr("r", radius)
+        .attr("r", function (d) {
+        return d.radius;
+    })
         .attr("id", function (d) {
         return d.id;
     })
@@ -18586,16 +18627,19 @@ function appendBubbles() {
         .on('mouseover', function (d) {
         d3.select(this)
             .style("fill", highlightedBlueColor)
-            .attr("r", radius + 5);
+            .attr("r", function (d) {
+            return d.radius + 5;
+        });
         highlightRow(d);
     })
         .on("mouseout", function (d) {
         d3.select(this)
             .style("fill", plainBlueColor)
-            .attr("r", radius);
+            .attr("r", function (d) {
+            return d.radius;
+        });
         highlightRow();
     });
-    defineBubbleMovement();
 }
 function defineBubbleMovement() {
     var bubbles = d3.select('#graph').selectAll("circle");
@@ -18604,14 +18648,14 @@ function defineBubbleMovement() {
     repeat();
     function repeat() {
         bubbles
-            .data(coordinates)
+            .data(bubbleList)
             .transition()
             .ease(d3.easeLinear)
             .attr("cx", function (d) {
-            return d.XValue;
+            return d.x;
         })
             .attr("cy", function (d) {
-            return d.YValue;
+            return d.y;
         })
             .duration(2000)
             .on("end", function () {
@@ -18623,24 +18667,24 @@ function defineBubbleMovement() {
 }
 function generateNewPositions() {
     var boundaries = document.getElementById("graph").getBoundingClientRect();
-    coordinates.forEach(function (element) {
-        element.XValue = element.generateRandomNumber(boundaries.width, radius);
-        element.YValue = element.generateRandomNumber(boundaries.height, radius);
+    bubbleList.forEach(function (element) {
+        element.x = element.generateRandomNumber(boundaries.width);
+        element.y = element.generateRandomNumber(boundaries.height);
     });
 }
 function updateTableEntries() {
     var table = document.getElementById("tableValues");
-    coordinates.forEach(function (element) {
+    bubbleList.forEach(function (element) {
         for (var r = 0, n = table.rows.length; r < n; r++) {
             if (Number(table.rows[r].cells[0].innerHTML) == element.id) {
                 for (var c = 1, m = table.rows[r].cells.length; c < m; c++) {
                     switch (table.rows[r].cells[c].id) {
                         case "xValue": {
-                            table.rows[r].cells[c].innerHTML = element.XValue.toString();
+                            table.rows[r].cells[c].innerHTML = element.x.toString();
                             break;
                         }
                         case "yValue": {
-                            table.rows[r].cells[c].innerHTML = element.YValue.toString();
+                            table.rows[r].cells[c].innerHTML = element.y.toString();
                             break;
                         }
                         default: {

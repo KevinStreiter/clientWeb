@@ -1,31 +1,55 @@
 export class Bubble {
-    private x: number;
-    private y: number;
+    readonly radius: number;
     readonly id: number;
+    private _x: number;
+    private _y: number;
+    private _vx: number;
+    private _vy: number;
 
-    public constructor(rowCounter:number, width: number, height: number, radius:number) {
-        this.x = this.generateRandomNumber(width, radius);
-        this.y = this.generateRandomNumber(height, radius);
+    public constructor(rowCounter:number, width: number, height: number, maxRadius:number) {
+        let velocity = Math.random() * 2 + 1;
+        let angle = Math.random() * 360;
         this.id = rowCounter;
+        this.radius = Math.floor(Math.random() * (maxRadius - 1) + 5);
+        this._x = this.generateRandomNumber(width);
+        this._y = this.generateRandomNumber(height);
+        this._vx = velocity * Math.cos(angle * Math.PI / 180);
+        this._vy = velocity * Math.sin(angle * Math.PI / 180);
     }
 
-    public generateRandomNumber(value:number, radius:number): number {
-        return Math.floor(Math.random() * (value - (radius*4))) + (radius*2);
+    public generateRandomNumber(value:number): number {
+        return Math.floor(Math.random() * (value - (this.radius*4))) + (this.radius*2);
     }
 
-    get XValue (): number {
-        return this.x;
+    get x(): number {
+        return this._x;
     }
 
-    set XValue (value: number) {
-        this.x = value;
+    set x(value: number) {
+        this._x = value;
     }
 
-    get YValue (): number {
-        return this.y;
+    get y(): number {
+        return this._y;
     }
 
-    set YValue (value: number) {
-        this.y = value;
+    set y(value: number) {
+        this._y = value;
+    }
+
+    get vx(): number {
+        return this._vx;
+    }
+
+    set vx(value: number) {
+        this._vx = value;
+    }
+
+    get vy(): number {
+        return this._vy;
+    }
+
+    set vy(value: number) {
+        this._vy = value;
     }
 }

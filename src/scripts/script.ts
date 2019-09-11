@@ -7,11 +7,11 @@ window.onload = () => {
     document.getElementById("tableValues").addEventListener("mouseout", onMouseOut, false);
 };
 
-const radius = 20;
+const maxRadius = 40;
 const plainBlueColor = "#7b9eb4";
 const highlightedBlueColor = "#323c4b";
 var rowCounter:number = 1;
-var coordinates:Bubble[] = [];
+var bubbleList:Bubble[] = [];
 
 function getEventTarget(e) {
     e = e || window.event;
@@ -20,7 +20,7 @@ function getEventTarget(e) {
 
 function findBubble (id:number) :Bubble {
     let bubble:Bubble = undefined;
-    coordinates.forEach((element) => {
+    bubbleList.forEach((element) => {
         if(element.id == id) {
             bubble = element;
         }
@@ -45,10 +45,11 @@ function onMouseOut() :void {
 
 function getRandomBubble() :void {
     let boundaries = document.getElementById("graph").getBoundingClientRect();
-    let bubble: Bubble = new Bubble(rowCounter, boundaries.width, boundaries.height, radius);
-    coordinates.push(bubble);
+    let bubble: Bubble = new Bubble(rowCounter, boundaries.width, boundaries.height, maxRadius);
+    bubbleList.push(bubble);
     insertRow(bubble);
     appendBubbles();
+    defineBubbleMovement();
     rowCounter++;
 }
 
@@ -59,8 +60,8 @@ function insertRow(bubble:Bubble) :void {
     let cell2 = row.insertCell(1);
     let cell3 = row.insertCell(2);
     cell1.innerHTML = rowCounter.toString();
-    cell2.innerHTML = bubble.XValue.toString();
-    cell3.innerHTML = bubble.YValue.toString();
+    cell2.innerHTML = bubble.x.toString();
+    cell3.innerHTML = bubble.y.toString();
     cell1.setAttribute("id", "id");
     cell2.setAttribute("id", "xValue");
     cell3.setAttribute("id", "yValue");
@@ -96,7 +97,9 @@ function highlightRow (bubble?:Bubble, row?:any) :void {
 function resetBubbleColor() :void {
     d3.select('#graph').selectAll("circle")
         .style("fill", plainBlueColor)
-        .attr("r", radius);
+        .attr("r", function(d) {
+            return d.radius;
+        });
 }
 
 function highlightBubble (bubble:Bubble) :void {
@@ -108,22 +111,25 @@ function highlightBubble (bubble:Bubble) :void {
             }
         })
         .style("fill", highlightedBlueColor)
-        .attr("r", radius+5);
+        .attr("r", function(d) {
+            return d.radius + 5;
+        });
 }
 
 
 function appendBubbles() :void {
-    let boundaries = document.getElementById("graph").getBoundingClientRect();
     d3.select('#graph').selectAll("circle")
-        .data(coordinates)
+        .data(bubbleList)
         .enter().append("circle")
         .attr("cx", function(d) {
-                return d.XValue;
+                return d.x;
         })
         .attr("cy", function(d) {
-                return d.YValue;
+                return d.y;
         })
-        .attr("r", radius)
+        .attr("r", function(d) {
+            return d.radius;
+        })
         .attr("id",function(d) {
             return d.id;
         })
@@ -131,16 +137,19 @@ function appendBubbles() :void {
         .on('mouseover', function(d){
             d3.select(this)
                 .style("fill", highlightedBlueColor)
-                .attr("r", radius+5);
+                .attr("r", function(d) {
+                    return d.radius + 5;
+                });
             highlightRow(d);
         })
         .on("mouseout", function(d) {
             d3.select(this)
                 .style("fill", plainBlueColor)
-                .attr("r", radius);
+                .attr("r", function(d) {
+                    return d.radius;
+                });
             highlightRow();
         });
-    defineBubbleMovement();
 }
 
 function defineBubbleMovement() {
@@ -150,14 +159,14 @@ function defineBubbleMovement() {
     repeat();
     function repeat() {
         bubbles
-            .data(coordinates)
+            .data(bubbleList)
             .transition()
             .ease(d3.easeLinear)
             .attr("cx", function(d) {
-                return d.XValue;
+                return d.x;
             })
             .attr("cy", function(d) {
-                return d.YValue;
+                return d.y;
             })
             .duration(2000)
             .on("end",function () {
@@ -170,25 +179,25 @@ function defineBubbleMovement() {
 
 function generateNewPositions() {
     let boundaries = document.getElementById("graph").getBoundingClientRect();
-    coordinates.forEach((element) => {
-        element.XValue = element.generateRandomNumber(boundaries.width, radius);
-        element.YValue = element.generateRandomNumber(boundaries.height, radius);
+    bubbleList.forEach((element) => {
+        element.x = element.generateRandomNumber(boundaries.width);
+        element.y = element.generateRandomNumber(boundaries.height);
     });
 }
 
 function updateTableEntries () {
     let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues");
-    coordinates.forEach((element) => {
+    bubbleList.forEach((element) => {
         for (let r = 0, n = table.rows.length; r < n; r++) {
                 if (Number(table.rows[r].cells[0].innerHTML) == element.id) {
                     for (let c = 1, m = table.rows[r].cells.length; c < m; c++) {
                         switch (table.rows[r].cells[c].id) {
                             case "xValue": {
-                                table.rows[r].cells[c].innerHTML = element.XValue.toString();
+                                table.rows[r].cells[c].innerHTML = element.x.toString();
                                 break;
                             }
                             case "yValue": {
-                                table.rows[r].cells[c].innerHTML = element.YValue.toString();
+                                table.rows[r].cells[c].innerHTML = element.y.toString();
                                 break;
                             }
                             default: {
