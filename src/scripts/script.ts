@@ -152,14 +152,14 @@ function defineBubbleMovement() {
         bubbles
             .data(coordinates)
             .transition()
+            .ease(d3.easeLinear)
             .attr("cx", function(d) {
                 return d.XValue;
             })
             .attr("cy", function(d) {
                 return d.YValue;
             })
-            .delay(0)
-            .duration(5000)
+            .duration(2000)
             .on("end",function () {
                 generateNewPositions();
                 updateTableEntries();

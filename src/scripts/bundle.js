@@ -1206,7 +1206,7 @@ function selection_empty() {
   return !this.node();
 }
 
-function selection_each(callback, repeat) {
+function selection_each(callback, defineBubbleMovement) {
 
   for (var groups = this._groups, j = 0, m = groups.length; j < m; ++j) {
     for (var group = groups[j], i = 0, n = group.length, node; i < n; ++i) {
@@ -18606,14 +18606,14 @@ function defineBubbleMovement() {
         bubbles
             .data(coordinates)
             .transition()
+            .ease(d3.easeLinear)
             .attr("cx", function (d) {
             return d.XValue;
         })
             .attr("cy", function (d) {
             return d.YValue;
         })
-            .delay(0)
-            .duration(5000)
+            .duration(2000)
             .on("end", function () {
             generateNewPositions();
             updateTableEntries();
