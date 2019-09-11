@@ -55,16 +55,6 @@ var Bubble = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Object.defineProperty(Bubble.prototype, "color", {
-        get: function () {
-            return this._color;
-        },
-        set: function (value) {
-            this._color = value;
-        },
-        enumerable: true,
-        configurable: true
-    });
     return Bubble;
 }());
 exports.Bubble = Bubble;
@@ -18509,9 +18499,7 @@ window.onload = function () {
     document.getElementById("tableValues").addEventListener("mouseover", onMouseOver, false);
     document.getElementById("tableValues").addEventListener("mouseout", onMouseOut, false);
 };
-var maxRadius = 40;
-var plainBlueColor = "#7b9eb4";
-var highlightedBlueColor = "#323c4b";
+var maxRadius = 40, plainBlueColor = "#7b9eb4", highlightedBlueColor = "#323c4b";
 var rowCounter = 1;
 var bubbleList = [];
 function getEventTarget(e) {
@@ -18538,23 +18526,71 @@ function onMouseOver() {
 }
 function onMouseOut() {
     resetRowColor();
-    resetBubbleColor();
+    resetBubbles();
 }
 function getRandomBubble() {
     var boundaries = document.getElementById("graph").getBoundingClientRect();
     var bubble = new bubble_1.Bubble(rowCounter, boundaries.width, boundaries.height, maxRadius);
     bubbleList.push(bubble);
     insertRow(bubble);
-    appendBubbles();
-    defineBubbleMovement();
+    insertBubble(bubble);
     rowCounter++;
 }
+function insertBubble(bubble) {
+    var boundaries = document.getElementById("graph").getBoundingClientRect();
+    var svg = d3.select('#graph');
+    var bubbleObject = svg.append("circle")
+        .attr("cx", bubble.x)
+        .attr("cy", bubble.y)
+        .attr("r", bubble.radius)
+        .attr("id", bubble.id)
+        .attr("fill", plainBlueColor)
+        .on('mouseover', function (d) {
+        d3.select(this)
+            .style("fill", highlightedBlueColor)
+            .attr("r", bubble.radius + 5);
+        highlightRow(bubble);
+    })
+        .on("mouseout", function (d) {
+        d3.select(this)
+            .style("fill", plainBlueColor)
+            .attr("r", bubble.radius);
+        highlightRow();
+    });
+    var diffX = bubble.vx;
+    var diffY = bubble.vy;
+    function moveX() {
+        var posX = Number(d3.select(this).attr("cx"));
+        var nextX = posX + diffX;
+        if (nextX < bubble.radius || nextX > boundaries.width - bubble.radius || isCollision(posX)) {
+            diffX = -1 * diffX;
+        }
+        return nextX;
+    }
+    function moveY() {
+        var posY = Number(d3.select(this).attr("cy"));
+        var nextY = posY + diffY;
+        if (nextY < bubble.radius || nextY > boundaries.height - bubble.radius || isCollision(posY)) {
+            diffY = -1 * diffY;
+        }
+        return nextY;
+    }
+    setInterval(function () {
+        bubbleObject.attr("cx", moveX).attr("cy", moveY);
+        updateTableEntries();
+    }, 1);
+    function isCollision(value) {
+        d3.select('#graph').selectAll("circle")
+            .each(function () {
+            if (Math.round((Number(this.cx))) == Math.round(value)) {
+                return true;
+            }
+        });
+        return false;
+    }
+}
 function insertRow(bubble) {
-    var table = document.getElementById("tableValues");
-    var row = table.insertRow(-1);
-    var cell1 = row.insertCell(0);
-    var cell2 = row.insertCell(1);
-    var cell3 = row.insertCell(2);
+    var table = document.getElementById("tableValues"), row = table.insertRow(-1), cell1 = row.insertCell(0), cell2 = row.insertCell(1), cell3 = row.insertCell(2);
     cell1.innerHTML = rowCounter.toString();
     cell2.innerHTML = bubble.x.toString();
     cell3.innerHTML = bubble.y.toString();
@@ -18587,104 +18623,46 @@ function highlightRow(bubble, row) {
         }
     }
 }
-function resetBubbleColor() {
+function resetBubbles() {
     d3.select('#graph').selectAll("circle")
-        .style("fill", plainBlueColor)
-        .attr("r", function (d) {
-        return d.radius;
+        .each(function () {
+        var _this = this;
+        bubbleList.forEach(function (element) {
+            if (Number(_this.id) == element.id) {
+                d3.select(_this)
+                    .style("fill", plainBlueColor)
+                    .attr("r", element.radius);
+            }
+        });
     });
 }
 function highlightBubble(bubble) {
-    resetBubbleColor();
+    resetBubbles();
     d3.select('#graph').selectAll("circle")
-        .filter(function (element) {
-        if (Number(element.id) == bubble.id) {
-            return element;
+        .each(function () {
+        if (Number(this.id) == bubble.id) {
+            d3.select(this)
+                .style("fill", highlightedBlueColor)
+                .attr("r", bubble.radius + 5);
         }
-    })
-        .style("fill", highlightedBlueColor)
-        .attr("r", function (d) {
-        return d.radius + 5;
-    });
-}
-function appendBubbles() {
-    d3.select('#graph').selectAll("circle")
-        .data(bubbleList)
-        .enter().append("circle")
-        .attr("cx", function (d) {
-        return d.x;
-    })
-        .attr("cy", function (d) {
-        return d.y;
-    })
-        .attr("r", function (d) {
-        return d.radius;
-    })
-        .attr("id", function (d) {
-        return d.id;
-    })
-        .style("fill", plainBlueColor)
-        .on('mouseover', function (d) {
-        d3.select(this)
-            .style("fill", highlightedBlueColor)
-            .attr("r", function (d) {
-            return d.radius + 5;
-        });
-        highlightRow(d);
-    })
-        .on("mouseout", function (d) {
-        d3.select(this)
-            .style("fill", plainBlueColor)
-            .attr("r", function (d) {
-            return d.radius;
-        });
-        highlightRow();
-    });
-}
-function defineBubbleMovement() {
-    var bubbles = d3.select('#graph').selectAll("circle");
-    generateNewPositions();
-    updateTableEntries();
-    repeat();
-    function repeat() {
-        bubbles
-            .data(bubbleList)
-            .transition()
-            .ease(d3.easeLinear)
-            .attr("cx", function (d) {
-            return d.x;
-        })
-            .attr("cy", function (d) {
-            return d.y;
-        })
-            .duration(2000)
-            .on("end", function () {
-            generateNewPositions();
-            updateTableEntries();
-            repeat();
-        });
-    }
-}
-function generateNewPositions() {
-    var boundaries = document.getElementById("graph").getBoundingClientRect();
-    bubbleList.forEach(function (element) {
-        element.x = element.generateRandomNumber(boundaries.width);
-        element.y = element.generateRandomNumber(boundaries.height);
     });
 }
 function updateTableEntries() {
     var table = document.getElementById("tableValues");
-    bubbleList.forEach(function (element) {
+    d3.select('#graph').selectAll("circle")
+        .each(function () {
         for (var r = 0, n = table.rows.length; r < n; r++) {
-            if (Number(table.rows[r].cells[0].innerHTML) == element.id) {
+            if (Number(table.rows[r].cells[0].innerHTML) == Number(this.id)) {
                 for (var c = 1, m = table.rows[r].cells.length; c < m; c++) {
                     switch (table.rows[r].cells[c].id) {
                         case "xValue": {
-                            table.rows[r].cells[c].innerHTML = element.x.toString();
+                            table.rows[r].cells[c].innerHTML = Math.round(Number(this.cx.baseVal.value)).toString();
+                            console.log(this.cx.baseVal.value);
                             break;
                         }
                         case "yValue": {
-                            table.rows[r].cells[c].innerHTML = element.y.toString();
+                            table.rows[r].cells[c].innerHTML = Math.round(Number(this.cy.baseVal.value)).toString();
+                            console.log(this.cy.baseVal.value);
                             break;
                         }
                         default: {

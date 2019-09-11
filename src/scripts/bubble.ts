@@ -15,9 +15,9 @@ export class Bubble {
         this._y = this.generateRandomNumber(height);
         this._vx = velocity * Math.cos(angle * Math.PI / 180);
         this._vy = velocity * Math.sin(angle * Math.PI / 180);
-    }
+   }
 
-    public generateRandomNumber(value:number): number {
+    private generateRandomNumber(value:number): number {
         return Math.floor(Math.random() * (value - (this.radius*4))) + (this.radius*2);
     }
 

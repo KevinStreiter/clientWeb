@@ -7,9 +7,9 @@ window.onload = () => {
     document.getElementById("tableValues").addEventListener("mouseout", onMouseOut, false);
 };
 
-const maxRadius = 40;
-const plainBlueColor = "#7b9eb4";
-const highlightedBlueColor = "#323c4b";
+const maxRadius = 40,
+    plainBlueColor = "#7b9eb4",
+    highlightedBlueColor = "#323c4b";
 var rowCounter:number = 1;
 var bubbleList:Bubble[] = [];
 
@@ -40,7 +40,7 @@ function onMouseOver() :void {
 
 function onMouseOut() :void {
     resetRowColor();
-    resetBubbleColor();
+    resetBubbles();
 }
 
 function getRandomBubble() :void {
@@ -48,17 +48,76 @@ function getRandomBubble() :void {
     let bubble: Bubble = new Bubble(rowCounter, boundaries.width, boundaries.height, maxRadius);
     bubbleList.push(bubble);
     insertRow(bubble);
-    appendBubbles();
-    defineBubbleMovement();
+    insertBubble(bubble);
     rowCounter++;
 }
 
+function insertBubble(bubble:Bubble) {
+    let boundaries = document.getElementById("graph").getBoundingClientRect();
+    let svg = d3.select('#graph');
+
+    let bubbleObject = svg.append("circle")
+        .attr("cx", bubble.x)
+        .attr("cy", bubble.y)
+        .attr("r", bubble.radius)
+        .attr("id", bubble.id)
+        .attr("fill", plainBlueColor)
+        .on('mouseover', function(d){
+            d3.select(this)
+                .style("fill", highlightedBlueColor)
+                .attr("r", bubble.radius +5);
+            highlightRow(bubble);
+        })
+        .on("mouseout", function(d) {
+            d3.select(this)
+                .style("fill", plainBlueColor)
+                .attr("r", bubble.radius);
+            highlightRow();
+        });
+
+    let diffX = bubble.vx;
+    let diffY = bubble.vy;
+
+    function moveX() {
+        let posX = Number(d3.select(this).attr("cx"));
+        let nextX = posX + diffX;
+        if (nextX < bubble.radius || nextX > boundaries.width - bubble.radius || isCollision(posX)) {
+            diffX = -1 * diffX;
+        }
+        return nextX;
+    }
+
+    function moveY() {
+        let posY = Number(d3.select(this).attr("cy"));
+        let nextY = posY + diffY;
+        if (nextY < bubble.radius || nextY > boundaries.height - bubble.radius || isCollision(posY)) {
+            diffY = -1 * diffY;
+        }
+        return nextY;
+    }
+
+    setInterval(function () {
+        bubbleObject.attr("cx", moveX).attr("cy", moveY);
+        updateTableEntries();
+    }, 1);
+
+    function isCollision(value:number) :boolean {
+        d3.select('#graph').selectAll("circle")
+            .each(function () {
+                if (Math.round((Number(this.cx))) ==  Math.round(value)) {
+                    return true;
+                }
+            });
+        return false;
+    }
+
+}
 function insertRow(bubble:Bubble) :void {
-    let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues");
-    let row = table.insertRow(-1);
-    let cell1 = row.insertCell(0);
-    let cell2 = row.insertCell(1);
-    let cell3 = row.insertCell(2);
+    let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues"),
+        row = table.insertRow(-1),
+        cell1 = row.insertCell(0),
+        cell2 = row.insertCell(1),
+        cell3 = row.insertCell(2);
     cell1.innerHTML = rowCounter.toString();
     cell2.innerHTML = bubble.x.toString();
     cell3.innerHTML = bubble.y.toString();
@@ -94,121 +153,58 @@ function highlightRow (bubble?:Bubble, row?:any) :void {
     }
 }
 
-function resetBubbleColor() :void {
+function resetBubbles() :void {
     d3.select('#graph').selectAll("circle")
-        .style("fill", plainBlueColor)
-        .attr("r", function(d) {
-            return d.radius;
-        });
+        .each(function () {
+            bubbleList.forEach((element) => {
+                if (Number(this.id) == element.id) {
+                    d3.select(this)
+                        .style("fill", plainBlueColor)
+                        .attr("r", element.radius);
+                }
+            });
+        })
 }
 
 function highlightBubble (bubble:Bubble) :void {
-    resetBubbleColor();
+    resetBubbles();
     d3.select('#graph').selectAll("circle")
-        .filter (function (element) {
-            if (Number(element.id) == bubble.id) {
-                return element;
+        .each(function () {
+            if (Number(this.id) == bubble.id) {
+                d3.select(this)
+                    .style("fill", highlightedBlueColor)
+                    .attr("r", bubble.radius + 5);
             }
         })
-        .style("fill", highlightedBlueColor)
-        .attr("r", function(d) {
-            return d.radius + 5;
-        });
-}
-
-
-function appendBubbles() :void {
-    d3.select('#graph').selectAll("circle")
-        .data(bubbleList)
-        .enter().append("circle")
-        .attr("cx", function(d) {
-                return d.x;
-        })
-        .attr("cy", function(d) {
-                return d.y;
-        })
-        .attr("r", function(d) {
-            return d.radius;
-        })
-        .attr("id",function(d) {
-            return d.id;
-        })
-        .style("fill", plainBlueColor)
-        .on('mouseover', function(d){
-            d3.select(this)
-                .style("fill", highlightedBlueColor)
-                .attr("r", function(d) {
-                    return d.radius + 5;
-                });
-            highlightRow(d);
-        })
-        .on("mouseout", function(d) {
-            d3.select(this)
-                .style("fill", plainBlueColor)
-                .attr("r", function(d) {
-                    return d.radius;
-                });
-            highlightRow();
-        });
-}
-
-function defineBubbleMovement() {
-    let bubbles = d3.select('#graph').selectAll("circle");
-    generateNewPositions();
-    updateTableEntries();
-    repeat();
-    function repeat() {
-        bubbles
-            .data(bubbleList)
-            .transition()
-            .ease(d3.easeLinear)
-            .attr("cx", function(d) {
-                return d.x;
-            })
-            .attr("cy", function(d) {
-                return d.y;
-            })
-            .duration(2000)
-            .on("end",function () {
-                generateNewPositions();
-                updateTableEntries();
-                repeat();
-            });
-    }
-}
-
-function generateNewPositions() {
-    let boundaries = document.getElementById("graph").getBoundingClientRect();
-    bubbleList.forEach((element) => {
-        element.x = element.generateRandomNumber(boundaries.width);
-        element.y = element.generateRandomNumber(boundaries.height);
-    });
 }
 
 function updateTableEntries () {
     let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues");
-    bubbleList.forEach((element) => {
-        for (let r = 0, n = table.rows.length; r < n; r++) {
-                if (Number(table.rows[r].cells[0].innerHTML) == element.id) {
-                    for (let c = 1, m = table.rows[r].cells.length; c < m; c++) {
-                        switch (table.rows[r].cells[c].id) {
-                            case "xValue": {
-                                table.rows[r].cells[c].innerHTML = element.x.toString();
-                                break;
-                            }
-                            case "yValue": {
-                                table.rows[r].cells[c].innerHTML = element.y.toString();
-                                break;
-                            }
-                            default: {
-                                // do nothing
-                                break;
+    d3.select('#graph').selectAll("circle")
+        .each(function () {
+            for (let r = 0, n = table.rows.length; r < n; r++) {
+                    if (Number(table.rows[r].cells[0].innerHTML) == Number(this.id)) {
+                        for (let c = 1, m = table.rows[r].cells.length; c < m; c++) {
+                            switch (table.rows[r].cells[c].id) {
+                                case "xValue": {
+                                    table.rows[r].cells[c].innerHTML = Math.round(Number(this.cx.baseVal.value)).toString();
+                                    console.log(this.cx.baseVal.value);
+                                    break;
+                                }
+                                case "yValue": {
+                                    table.rows[r].cells[c].innerHTML = Math.round(Number(this.cy.baseVal.value)).toString();
+                                    console.log(this.cy.baseVal.value);
+                                    break;
+                                }
+                                default: {
+                                    // do nothing
+                                    break;
+                                }
                             }
                         }
                     }
-                }
-        }
-    });
+            }
+        });
 }
 
 
