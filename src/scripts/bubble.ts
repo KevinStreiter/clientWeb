@@ -6,20 +6,14 @@ export class Bubble {
     private _vx: number;
     private _vy: number;
 
-    public constructor(rowCounter:number, width: number, height: number, maxRadius:number) {
-        let velocity = Math.random() * 2 + 1;
-        let angle = Math.random() * 360;
-        this.id = rowCounter;
+    public constructor(rowCounter:number, x: number, y: number, maxRadius:number) {
         this.radius = Math.floor(Math.random() * (maxRadius - 1) + 5);
-        this._x = this.generateRandomNumber(width);
-        this._y = this.generateRandomNumber(height);
-        this._vx = velocity * Math.cos(angle * Math.PI / 180);
-        this._vy = velocity * Math.sin(angle * Math.PI / 180);
+        this.id = rowCounter;
+        this._x = x;
+        this._y = y;
+        this._vx =  (Math.random() * 2 + 1) * Math.cos(Math.random() * 360 * Math.PI / 180);
+        this._vy =  (Math.random() * 2 + 1) * Math.sin(Math.random() * 360 * Math.PI / 180);
    }
-
-    private generateRandomNumber(value:number): number {
-        return Math.floor(Math.random() * (value - (this.radius*4))) + (this.radius*2);
-    }
 
     get x(): number {
         return this._x;

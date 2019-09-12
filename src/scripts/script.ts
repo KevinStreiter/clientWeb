@@ -2,9 +2,11 @@ import { Bubble } from "./bubble"
 import * as d3 from "./modules/d3.js"
 
 window.onload = () => {
-    document.getElementById ("button").addEventListener ("click", getRandomBubble, false);
     document.getElementById("tableValues").addEventListener("mouseover", onMouseOver, false);
     document.getElementById("tableValues").addEventListener("mouseout", onMouseOut, false);
+    d3.select('#graph').on("click", function () {
+        return createBubble(d3.mouse(this));
+    });
 };
 
 const maxRadius = 40,
@@ -43,35 +45,52 @@ function onMouseOut() :void {
     resetBubbles();
 }
 
-function getRandomBubble() :void {
-    let boundaries = document.getElementById("graph").getBoundingClientRect();
-    let bubble: Bubble = new Bubble(rowCounter, boundaries.width, boundaries.height, maxRadius);
-    bubbleList.push(bubble);
-    insertRow(bubble);
-    insertBubble(bubble);
-    rowCounter++;
+function createBubble(event:any) :void {
+    let bubble: Bubble = new Bubble(rowCounter, event[0], event[1], maxRadius);
+    let collision:boolean = false;
+    d3.select('#graph').selectAll("circle")
+        .each(function () {
+            let cx: number = this.cx.baseVal.value;
+            let cy: number = this.cy.baseVal.value;
+            let r: number = this.r.baseVal.value;
+            let distance = Math.sqrt(((bubble.x - cx) * (bubble.x - cx)) + ((bubble.y - cy) * (bubble.y - cy)));
+            if (distance <= (bubble.radius + r)) {
+                collision = true;
+            }
+        });
+    if (!collision) {
+        bubbleList.push(bubble);
+        insertRow(bubble);
+        insertBubble(bubble);
+        rowCounter++;
+    }
 }
 
 function insertBubble(bubble:Bubble) {
     let boundaries = document.getElementById("graph").getBoundingClientRect();
     let svg = d3.select('#graph');
-
     let bubbleObject = svg.append("circle")
         .attr("cx", bubble.x)
         .attr("cy", bubble.y)
         .attr("r", bubble.radius)
         .attr("id", bubble.id)
         .attr("fill", plainBlueColor)
-        .on('mouseover', function(d){
+        .on('mouseover', function(){
             d3.select(this)
                 .style("fill", highlightedBlueColor)
                 .attr("r", bubble.radius +5);
             highlightRow(bubble);
         })
-        .on("mouseout", function(d) {
+        .on("mouseout", function() {
             d3.select(this)
                 .style("fill", plainBlueColor)
                 .attr("r", bubble.radius);
+            highlightRow();
+        })
+        .on("dblclick", function() {
+            d3.select(this)
+                .remove();
+            removeRow(this);
             highlightRow();
         });
 
@@ -81,7 +100,7 @@ function insertBubble(bubble:Bubble) {
     function moveX() {
         let posX = Number(d3.select(this).attr("cx"));
         let nextX = posX + diffX;
-        if (nextX < bubble.radius || nextX > boundaries.width - bubble.radius || isCollision(posX)) {
+        if (nextX < bubble.radius || nextX > boundaries.width - bubble.radius || isCollision(nextX, undefined,this)) {
             diffX = -1 * diffX;
         }
         return nextX;
@@ -90,7 +109,7 @@ function insertBubble(bubble:Bubble) {
     function moveY() {
         let posY = Number(d3.select(this).attr("cy"));
         let nextY = posY + diffY;
-        if (nextY < bubble.radius || nextY > boundaries.height - bubble.radius || isCollision(posY)) {
+        if (nextY < bubble.radius || nextY > boundaries.height - bubble.radius || isCollision(undefined, nextY,this)) {
             diffY = -1 * diffY;
         }
         return nextY;
@@ -99,19 +118,33 @@ function insertBubble(bubble:Bubble) {
     setInterval(function () {
         bubbleObject.attr("cx", moveX).attr("cy", moveY);
         updateTableEntries(bubble, bubbleObject);
-    }, 1);
-
-    function isCollision(value:number) :boolean {
-        d3.select('#graph').selectAll("circle")
-            .each(function () {
-                if (Math.round((Number(this.cx))) ==  Math.round(value)) {
-                    return true;
-                }
-            });
-        return false;
-    }
-
+    }, 50);
 }
+
+function isCollision(x:number, y:number, element:any) :boolean {
+    let collision:boolean = false;
+    let radius:number = element.r.baseVal.value;
+    if (x == undefined) {
+        x = element.cx.baseVal.value;
+    }
+    else if (y == undefined) {
+        y = element.cy.baseVal.value;
+    }
+    d3.select('#graph').selectAll("circle")
+        .each(function () {
+            if (Number(element.id) != Number(this.id)) {
+                let cx:number = this.cx.baseVal.value;
+                let cy:number = this.cy.baseVal.value;
+                let r:number = this.r.baseVal.value;
+                let distance = Math.sqrt(((x - cx) * (x - cx)) + ((y - cy) * (y - cy)));
+                if (distance <= (radius + r)) {
+                    collision = true;
+                }
+            }
+        });
+    return collision;
+}
+
 function insertRow(bubble:Bubble) :void {
     let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues"),
         row = table.insertRow(-1),
@@ -125,6 +158,12 @@ function insertRow(bubble:Bubble) :void {
     cell1.setAttribute("id", "id");
     cell2.setAttribute("id", "xValue");
     cell3.setAttribute("id", "yValue");
+}
+
+function removeRow(element:any) :void {
+    let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues");
+    let row = table.rows.namedItem(element.id);
+    table.deleteRow(row.rowIndex);
 }
 
 function resetRowColor() :void {
@@ -182,8 +221,10 @@ function highlightBubble (bubble:Bubble) :void {
 function updateTableEntries (bubble:Bubble, element:any) {
     let table: HTMLTableElement = <HTMLTableElement> document.getElementById("tableValues");
     let row = table.rows.namedItem(bubble.id.toString());
-    row.cells.namedItem("xValue").innerHTML = Math.round(Number(element.attr("cx"))).toString();
-    row.cells.namedItem("yValue").innerHTML = Math.round(Number(element.attr("cy"))).toString();
+    if (row != null) {
+        row.cells.namedItem("xValue").innerHTML = Math.round(Number(element.attr("cx"))).toString();
+        row.cells.namedItem("yValue").innerHTML = Math.round(Number(element.attr("cy"))).toString();
+    }
 }
 
 

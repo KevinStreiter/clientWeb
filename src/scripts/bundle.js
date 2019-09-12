@@ -2,19 +2,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 var Bubble = /** @class */ (function () {
-    function Bubble(rowCounter, width, height, maxRadius) {
-        var velocity = Math.random() * 2 + 1;
-        var angle = Math.random() * 360;
-        this.id = rowCounter;
+    function Bubble(rowCounter, x, y, maxRadius) {
         this.radius = Math.floor(Math.random() * (maxRadius - 1) + 5);
-        this._x = this.generateRandomNumber(width);
-        this._y = this.generateRandomNumber(height);
-        this._vx = velocity * Math.cos(angle * Math.PI / 180);
-        this._vy = velocity * Math.sin(angle * Math.PI / 180);
+        this.id = rowCounter;
+        this._x = x;
+        this._y = y;
+        this._vx = (Math.random() * 2 + 1) * Math.cos(Math.random() * 360 * Math.PI / 180);
+        this._vy = (Math.random() * 2 + 1) * Math.sin(Math.random() * 360 * Math.PI / 180);
     }
-    Bubble.prototype.generateRandomNumber = function (value) {
-        return Math.floor(Math.random() * (value - (this.radius * 4))) + (this.radius * 2);
-    };
     Object.defineProperty(Bubble.prototype, "x", {
         get: function () {
             return this._x;
@@ -18495,9 +18490,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var bubble_1 = require("./bubble");
 var d3 = require("./modules/d3.js");
 window.onload = function () {
-    document.getElementById("button").addEventListener("click", getRandomBubble, false);
     document.getElementById("tableValues").addEventListener("mouseover", onMouseOver, false);
     document.getElementById("tableValues").addEventListener("mouseout", onMouseOut, false);
+    d3.select('#graph').on("click", function () {
+        return createBubble(d3.mouse(this));
+    });
 };
 var maxRadius = 40, plainBlueColor = "#7b9eb4", highlightedBlueColor = "#323c4b";
 var rowCounter = 1;
@@ -18528,13 +18525,25 @@ function onMouseOut() {
     resetRowColor();
     resetBubbles();
 }
-function getRandomBubble() {
-    var boundaries = document.getElementById("graph").getBoundingClientRect();
-    var bubble = new bubble_1.Bubble(rowCounter, boundaries.width, boundaries.height, maxRadius);
-    bubbleList.push(bubble);
-    insertRow(bubble);
-    insertBubble(bubble);
-    rowCounter++;
+function createBubble(event) {
+    var bubble = new bubble_1.Bubble(rowCounter, event[0], event[1], maxRadius);
+    var collision = false;
+    d3.select('#graph').selectAll("circle")
+        .each(function () {
+        var cx = this.cx.baseVal.value;
+        var cy = this.cy.baseVal.value;
+        var r = this.r.baseVal.value;
+        var distance = Math.sqrt(((bubble.x - cx) * (bubble.x - cx)) + ((bubble.y - cy) * (bubble.y - cy)));
+        if (distance <= (bubble.radius + r)) {
+            collision = true;
+        }
+    });
+    if (!collision) {
+        bubbleList.push(bubble);
+        insertRow(bubble);
+        insertBubble(bubble);
+        rowCounter++;
+    }
 }
 function insertBubble(bubble) {
     var boundaries = document.getElementById("graph").getBoundingClientRect();
@@ -18545,16 +18554,22 @@ function insertBubble(bubble) {
         .attr("r", bubble.radius)
         .attr("id", bubble.id)
         .attr("fill", plainBlueColor)
-        .on('mouseover', function (d) {
+        .on('mouseover', function () {
         d3.select(this)
             .style("fill", highlightedBlueColor)
             .attr("r", bubble.radius + 5);
         highlightRow(bubble);
     })
-        .on("mouseout", function (d) {
+        .on("mouseout", function () {
         d3.select(this)
             .style("fill", plainBlueColor)
             .attr("r", bubble.radius);
+        highlightRow();
+    })
+        .on("dblclick", function () {
+        d3.select(this)
+            .remove();
+        removeRow(this);
         highlightRow();
     });
     var diffX = bubble.vx;
@@ -18562,7 +18577,7 @@ function insertBubble(bubble) {
     function moveX() {
         var posX = Number(d3.select(this).attr("cx"));
         var nextX = posX + diffX;
-        if (nextX < bubble.radius || nextX > boundaries.width - bubble.radius || isCollision(posX)) {
+        if (nextX < bubble.radius || nextX > boundaries.width - bubble.radius || isCollision(nextX, undefined, this)) {
             diffX = -1 * diffX;
         }
         return nextX;
@@ -18570,7 +18585,7 @@ function insertBubble(bubble) {
     function moveY() {
         var posY = Number(d3.select(this).attr("cy"));
         var nextY = posY + diffY;
-        if (nextY < bubble.radius || nextY > boundaries.height - bubble.radius || isCollision(posY)) {
+        if (nextY < bubble.radius || nextY > boundaries.height - bubble.radius || isCollision(undefined, nextY, this)) {
             diffY = -1 * diffY;
         }
         return nextY;
@@ -18578,16 +18593,30 @@ function insertBubble(bubble) {
     setInterval(function () {
         bubbleObject.attr("cx", moveX).attr("cy", moveY);
         updateTableEntries(bubble, bubbleObject);
-    }, 1);
-    function isCollision(value) {
-        d3.select('#graph').selectAll("circle")
-            .each(function () {
-            if (Math.round((Number(this.cx))) == Math.round(value)) {
-                return true;
-            }
-        });
-        return false;
+    }, 50);
+}
+function isCollision(x, y, element) {
+    var collision = false;
+    var radius = element.r.baseVal.value;
+    if (x == undefined) {
+        x = element.cx.baseVal.value;
     }
+    else if (y == undefined) {
+        y = element.cy.baseVal.value;
+    }
+    d3.select('#graph').selectAll("circle")
+        .each(function () {
+        if (Number(element.id) != Number(this.id)) {
+            var cx = this.cx.baseVal.value;
+            var cy = this.cy.baseVal.value;
+            var r = this.r.baseVal.value;
+            var distance = Math.sqrt(((x - cx) * (x - cx)) + ((y - cy) * (y - cy)));
+            if (distance <= (radius + r)) {
+                collision = true;
+            }
+        }
+    });
+    return collision;
 }
 function insertRow(bubble) {
     var table = document.getElementById("tableValues"), row = table.insertRow(-1), cell1 = row.insertCell(0), cell2 = row.insertCell(1), cell3 = row.insertCell(2);
@@ -18598,6 +18627,11 @@ function insertRow(bubble) {
     cell1.setAttribute("id", "id");
     cell2.setAttribute("id", "xValue");
     cell3.setAttribute("id", "yValue");
+}
+function removeRow(element) {
+    var table = document.getElementById("tableValues");
+    var row = table.rows.namedItem(element.id);
+    table.deleteRow(row.rowIndex);
 }
 function resetRowColor() {
     var table = document.getElementById("tableValues");
@@ -18651,8 +18685,10 @@ function highlightBubble(bubble) {
 function updateTableEntries(bubble, element) {
     var table = document.getElementById("tableValues");
     var row = table.rows.namedItem(bubble.id.toString());
-    row.cells.namedItem("xValue").innerHTML = Math.round(Number(element.attr("cx"))).toString();
-    row.cells.namedItem("yValue").innerHTML = Math.round(Number(element.attr("cy"))).toString();
+    if (row != null) {
+        row.cells.namedItem("xValue").innerHTML = Math.round(Number(element.attr("cx"))).toString();
+        row.cells.namedItem("yValue").innerHTML = Math.round(Number(element.attr("cy"))).toString();
+    }
 }
 
 },{"./bubble":1,"./modules/d3.js":2}]},{},[3]);
