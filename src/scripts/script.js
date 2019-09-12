@@ -99,7 +99,8 @@ function insertBubble(bubble) {
 }
 function insertRow(bubble) {
     var table = document.getElementById("tableValues"), row = table.insertRow(-1), cell1 = row.insertCell(0), cell2 = row.insertCell(1), cell3 = row.insertCell(2);
-    cell1.innerHTML = rowCounter.toString();
+    row.setAttribute("id", bubble.id.toString());
+    cell1.innerHTML = bubble.id.toString();
     cell2.innerHTML = bubble.x.toString();
     cell3.innerHTML = bubble.y.toString();
     cell1.setAttribute("id", "id");
@@ -157,24 +158,7 @@ function highlightBubble(bubble) {
 }
 function updateTableEntries(bubble, element) {
     var table = document.getElementById("tableValues");
-    for (var r = 0, n = table.rows.length; r < n; r++) {
-        if (Number(table.rows[r].cells[0].innerHTML) == bubble.id) {
-            for (var c = 1, m = table.rows[r].cells.length; c < m; c++) {
-                switch (table.rows[r].cells[c].id) {
-                    case "xValue": {
-                        table.rows[r].cells[c].innerHTML = Math.round(Number(element.attr("cx"))).toString();
-                        break;
-                    }
-                    case "yValue": {
-                        table.rows[r].cells[c].innerHTML = Math.round(Number(element.attr("cy"))).toString();
-                        break;
-                    }
-                    default: {
-                        // do nothing
-                        break;
-                    }
-                }
-            }
-        }
-    }
+    var row = table.rows.namedItem(bubble.id.toString());
+    row.cells.namedItem("xValue").innerHTML = Math.round(Number(element.attr("cx"))).toString();
+    row.cells.namedItem("yValue").innerHTML = Math.round(Number(element.attr("cy"))).toString();
 }
