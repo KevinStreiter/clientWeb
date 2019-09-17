@@ -1,0 +1,7 @@
+# ignore all logs
+*.log
+composer-setup.php
+/.idea/
+/vendor/
+/node_modules/
+

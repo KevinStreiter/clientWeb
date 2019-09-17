@@ -118,7 +118,7 @@ function insertBubble(bubble:Bubble) {
     setInterval(function () {
         bubbleObject.attr("cx", moveX).attr("cy", moveY);
         updateTableEntries(bubble, bubbleObject);
-    }, 50);
+    }, 25);
 }
 
 function isCollision(x:number, y:number, element:any) :boolean {
