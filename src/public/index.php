@@ -1,14 +1,17 @@
 <?php
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
+use Slim\Views\PhpRenderer;
 
 require '../../vendor/autoload.php';
 
 $app = new \Slim\App;
-$app->get('/hello/{name}', function (Request $request, Response $response, array $args) {
-    $name = $args['name'];
-    $response->getBody()->write("Hello, $name");
+$container = $app->getContainer();
+$container['renderer'] = new PhpRenderer("./templates");
 
-    return $response;
+
+$app->get('/bubbles', function ($request, $response, $args) {
+    return $this->renderer->render($response, "/home.html", $args);
 });
+
 $app->run();
