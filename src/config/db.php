@@ -1,9 +1,10 @@
 <?php
+include("config.php");
 class db {
-    private $host = 'localhost';
-    private $user = 'kev';
-    private $pass = 'MWXw9$Ppmjl51drrm7';
-    private $dbname = 'mySlimDB';
+    private $host = DB_SERVER;
+    private $user = DB_USERNAME;
+    private $pass = DB_PASSWORD;
+    private $dbname = DB_DATABASE;
 
     public function connect() {
         $mysql_connect_str = "mysql:host=$this->host;dbname=$this->dbname";
