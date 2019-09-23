@@ -6,15 +6,12 @@ use Slim\Views\PhpRenderer as PhpRenderer;
 use Cake\Database\Connection;
 use Slim\Container;
 
-$app->get('/bubbles', function ($request, $response, $args) {
-    return $this->get(PhpRenderer::class)->render($response, "/home.html", $args);
-});
 
-$app->get('/login', function ($request, $response, $args) {
+$app->get('/bubbles', function ($request, $response, $args) {
     return $this->get(PhpRenderer::class)->render($response, "/login.html", $args);
 });
 
-$app->post('/login', \App\Controllers\UserController::class);
+$app->post('/bubbles', \App\Controllers\UserController::class);
 
 
 $app->get('/databases', function (Request $request, Response $response) {
@@ -30,4 +27,3 @@ $app->get('/databases', function (Request $request, Response $response) {
     // return a json response
     return $response->withJson($rows);
 });
-
