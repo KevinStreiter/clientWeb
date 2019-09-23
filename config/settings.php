@@ -1,4 +1,7 @@
 <?php
+
+require 'config.php';
+
 $settings = [];
 
 // Slim settings
@@ -12,10 +15,10 @@ $settings['public'] = $settings['root'] . '/public';
 // Database settings
 $settings['db'] = [
     'driver' => 'mysql',
-    'host' => 'localhost',
-    'username' => 'kev',
-    'database' => 'mySlimDB',
-    'password' => 'MWXw9$Ppmjl51drrm7',
+    'host' => DB_SERVER,
+    'username' => DB_USERNAME,
+    'database' => DB_DATABASE,
+    'password' => DB_PASSWORD,
     'charset' => 'utf8',
     'collation' => 'utf8_unicode_ci',
     'flags' => [
