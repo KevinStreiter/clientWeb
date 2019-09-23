@@ -18546,7 +18546,6 @@ function createBubble(event) {
     }
 }
 function insertBubble(bubble) {
-    var boundaries = document.getElementById("graph").getBoundingClientRect();
     var svg = d3.select('#graph');
     var bubbleObject = svg.append("circle")
         .attr("cx", bubble.x)
@@ -18575,6 +18574,7 @@ function insertBubble(bubble) {
     var diffX = bubble.vx;
     var diffY = bubble.vy;
     function moveX() {
+        var boundaries = document.getElementById("graph").getBoundingClientRect();
         var posX = Number(d3.select(this).attr("cx"));
         var nextX = posX + diffX;
         if (nextX < bubble.radius || nextX > boundaries.width - bubble.radius || isCollision(nextX, undefined, this)) {
@@ -18583,6 +18583,7 @@ function insertBubble(bubble) {
         return nextX;
     }
     function moveY() {
+        var boundaries = document.getElementById("graph").getBoundingClientRect();
         var posY = Number(d3.select(this).attr("cy"));
         var nextY = posY + diffY;
         if (nextY < bubble.radius || nextY > boundaries.height - bubble.radius || isCollision(undefined, nextY, this)) {
