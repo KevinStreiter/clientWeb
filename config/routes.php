@@ -14,10 +14,8 @@ $app->get('/login', function ($request, $response, $args) {
     return $this->get(PhpRenderer::class)->render($response, "/login.html", $args);
 });
 
-$app->post('/login', function ($request, $response, $args) {
-    $data = $request->getParsedBody();
-    print_r($data);
-});
+$app->post('/login', \App\Controllers\UserController::class);
+
 
 $app->get('/databases', function (Request $request, Response $response) {
     /** @var Container $this */
@@ -32,3 +30,4 @@ $app->get('/databases', function (Request $request, Response $response) {
     // return a json response
     return $response->withJson($rows);
 });
+
